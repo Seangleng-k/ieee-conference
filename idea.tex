@@ -1,0 +1,177 @@
+\documentclass{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{ieeemacros}
+
+
+\begin{document}
+
+The whole bilevel program: 
+\begin{subequations}
+  \begin{align}
+    \max_{\call_{\consumer}} \quad & \boxed{commission} - \alpha \times \boxed{\text{unmet target}} - \beta \times \boxed{fairness} \\
+    \subjto \quad & \sum_{\consumer} \call_{\consumer} = \target \\
+    & \min_{\shift_{\consumer}} \quad \boxed{bill} + \boxed{unwillingness} - \boxed{reward} \\
+    & \subjto \quad \shift_{\consumer} \in [0,1]
+  \end{align}
+\end{subequations}
+
+
+
+
+\begin{enumerate}
+  \item For {\red{consumer \consumer: }}
+  \begin{enumerate}
+    \item $\boxed{bill} = \underbrace{\onprice \times \baseline_{\consumer} \times (1 - \shift_{\consumer})}_{\text{\green bill during on-peak hours}} + \underbrace{\offprice \times \baseline_{\consumer} \times \shift_{\consumer}}_{\text{\green bill during off-peak hours}}$
+    \item \boxed{reward} = $ \shift_{\consumer} \times \text{\baseline}_{\consumer} \times (\onprice - \offprice) \times 50 \%$ \\
+
+      For example, Suppose that normally the consumer spend 1000B for electricity.
+      If this consumer accepts the call from the aggrgator and suppose that the cost reduces to 700B.
+      This means that that consumer is already incentivized 300B.
+      Yet the reward is calculated as half of the 300B which is 150B.
+      %This means that each consumer is incentivized $\frac32$ of the 
+
+    \item \boxed{unwillingness}
+  \end{enumerate}
+  \item For {\red{Aggregator: }}
+  \begin{enumerate}
+    \item \boxed{commission} The commission is based on the rate
+    \begin{equation}
+      rate(x) = 
+      \begin{cases}
+        5\%, \quad x < \frac12 \target \\
+        7 \%, \quad x \ge \frac12 \target,
+      \end{cases}
+    \end{equation}
+    where $\shift$ is the amount of electricity shift from all consumers.
+    This commission rate is called \emph{Override}. 
+    So if the total shift is less than 50\%, then the rate is 5\%.
+    If the total shift is greater than 50\%, then the rate is 7\%.
+
+    The commission is like this:
+    \begin{equation}
+      \com(x) = 
+      \begin{cases}
+        5\% \times x, \quad x < \frac12 \target \vspace{0.1cm}\\
+        5\% \times x, \quad x \ge \frac12 \target.
+      \end{cases}
+    \end{equation}
+    The rate of this commission would be $\onprice - \offprice$.
+    \item $\boxed{\text{unmet target}} = \target - \sum_{\consumer} \shift_{\consumer} \times \baseline_{\consumer}$
+    \item $\boxed{fairness} = \frac{1}{\totalConsumers} \sum_{\consumer} (\midcall - \call_{\consumer})^2$, where $\midcall = \frac{1}{\totalConsumers} \sum_{\consumer} \call_{\consumer}$ is the average of the total calls sent to consumers.
+  \end{enumerate}
+\end{enumerate}
+
+
+The bilevel optimization problem shall be  
+\begin{subequations}
+  \begin{align}
+    \max_{\call_{\consumer}} \quad & (\onprice - \offprice) \com(\shift_{\consumer}) - \alpha ( \target - \sum_{\shift_{\consumer}} \shift_{\consumer} \baseline_{\consumer} ) - \beta \frac{1}{N} \sum_{\consumer} (\midcall - \call_{\consumer})^2 \\
+    \subjto \quad & \sum_{\consumer=1}^{\totalConsumers} \call_{\consumer} = \target \\
+    & \min_{\shift_{\consumer}} \quad \onprice \baseline_{\consumer} (1 - \shift_{\consumer}) + \offprice \baseline_{\consumer} \shift_{\consumer} + \boxed{unwillingness} \\
+    & \qquad - \frac{1}{2} \shift_{\consumer} \text{\baseline}_{\consumer} (\onprice - \offprice) \notag \\
+    & \subjto \quad \shift_{\consumer} \in [0,1]
+  \end{align}
+\end{subequations}
+
+
+{\red Problem description} Normally in the energy market, there are different stakeholders including producer/utility, aggregator, and consumers \cite{ALAMOUSH2024114074}.
+In this study, the framework is induced to interactions between two stakeholders --- one aggregator and several consumers.
+The aggregator has been notified by the energy producer to reduce the electricity consumption during on-peak hours.
+The aggregator as usual will pass this piece of information to the consumers.
+Since, there are many consumers, then the aggregator needs to decide which consumers should he calls and not to call.
+He can either call all consumers to shift their electricity consumption.
+He also decides how much electricity each consumer should shift their load according to the data of electricity consumption of each consumer he owns so that he can achieve the goal of electricity reduction.
+In this load shedding operation, the aggregator shall recieve the commission based on his performance.
+Therefore, the aggregator must try his best to cut the electricity consumption during on-peak hours so that he can get the maximum commission.
+For the consumers, when recieve the call from the aggregator they can either fully or partially comply to the call.
+By fully complying, consumers will be able to shift the electricity consumption as requested during on-peak hours, as the partially complying refers to the situation when the consumers cannnot reduce the exact amount of electricity call from the aggregator.
+By this sense, the consumers have options to react to the call when possible.
+Similarly, the consumers would recieve rewards based on their performance.
+
+{\red Concept of the Proposed model}
+In this study, the one-leader, N-follower optimistic bilevel programming is developped to consider the interaction between two stakeholders --- aggregator and consumers.
+The aggregator plays as a leader and the consumers play as followers in the proposed model.
+The aggregator when recieves the call from the energy producer to reduce the electricity consumption during on-peak hours, he passes the information to the end-consumers.
+The strategy of the leader is defined by the set of the electricity calls to the consumers and the amount of electricity reduction set to each participated consumer.
+The benefit of the leader is obtained by commissioning when call to the consumers, and the consumers would be incentivized and rewarded by reducing/shifting the electricity consumption during on-peak hours to off-peak hours.
+The results of the problem shall be the optimal load control achieved by the consumers regarding to the call of electricity reduction.
+
+The inputs of the problem consists players, player's strategy set, total electricity call from the producer which contribute to results of the problem \cite{yu2016}.
+Based on these input details, the game proceeds in the following manners. 
+Provided that the followers will respond optimally, initially the leader discloses his strategy to the followers, then the followers as expected would select their own optimal strategy from the strategy set that is deemed the "best response" to the leader's strategy.
+Then the simulation is repeated itself so that the optimal solution is obtained from all palyers.
+The bilevel optimzation is defined for each player to facilitate it in an optimally strategic possible way.
+
+For one-leader, N-follower optimistic bilevel programming model, both leader and followers are assumed to cooperate with another instead of going against one another.
+The followers are not harming the objective of the leader.
+The leader has its own optimization problem and so is each follower.
+In solving the bilevel problem, attention is initially focused on the followers' problem then continues to the leader's problem.
+In this setting, the optimal strategy from the followers matters to the leader optimal strategy.
+Therefore, the followers's optimal strategy chosen from the set of optimal strategies serves the objective of the leader otherwise, we have challenges that can be problematic.
+
+
+
+
+
+
+
+
+
+
+\newpage
+{\red Literature reviews}
+
+
+\cite{sinha2018review}
+
+
+\newpage
+
+\vspace{0.4cm}
+
+\boxed{commission} for the aggregator is based on the rate
+\begin{equation}
+  rate(x) = 
+  \begin{cases}
+    5\%, \quad x < \frac12 \times \target \\
+    10 \%, \quad \frac12 \target \le x < \frac23 \target \\
+    15 \%, \quad x \ge \frac23 \target,
+  \end{cases}
+\end{equation}
+where $x$ is the total amount of electricity shift from all consumers.
+
+The commission is called \emph{tier}. 
+This commission goes as follows.
+If the target is achieved less than 50\%, then the aggregator obtains 5\%.
+If it is achieved more than 50\% and less than $\frac23$ of the target amount, then he obtains 10\%.
+Otherwise, he obtains 15\%.
+
+The commission is like this:
+
+\begin{equation}
+  com(x) = 
+  \begin{cases}
+    5\% \times x , \quad x < \frac12 \target \vspace{0.1cm}\\
+    5\% \times \frac12 \target + 10\% (x- \frac12 \target), \quad \frac12 \target \le x < \frac23 \target \vspace{0.1cm} \\
+    5\% \times \frac12 \target + 10\% \times \frac16 \target + 15 \% \times (x - \frac23 \target), \quad x \ge \frac23 \target \vspace{0.1cm}
+  \end{cases}
+\end{equation}
+The rate of this commission would be $\onprice - \offprice$.
+
+
+
+
+
+
+\bibliographystyle{unsrt}
+\bibliography{ieeeref.bib}
+
+
+
+
+\end{document}
+

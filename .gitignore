@@ -1,0 +1,12 @@
+* 
+
+!.gitignore
+
+
+!*.cls
+!*.png
+!*.jpg
+!*.tex
+!*.sty
+!*.bib
+!*.md
