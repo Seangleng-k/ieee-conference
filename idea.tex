@@ -1,10 +1,17 @@
 \documentclass{article}
 
-\usepackage{amsmath,amssymb}
+
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{amsmath,amssymb,amsfonts,bbm}
 \usepackage{xcolor}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{algorithmic}
+\usepackage{graphicx,float}
+\usepackage{tabularray}
+\usepackage{supertabular}
 
 \usepackage{ieeemacros}
+\usepackage{optdefi}
 
 
 \begin{document}
@@ -12,10 +19,11 @@
 The whole bilevel program: 
 \begin{subequations}
   \begin{align}
-    \max_{\call_{\consumer}} \quad & \boxed{commission} - \alpha \times \boxed{\text{unmet target}} - \beta \times \boxed{fairness} \\
+    \max_{\call_{\consumer}, \whom_{\consumer}} \quad & \boxed{commission} - \alpha \times \boxed{\text{unmet target}} - \beta \times \boxed{fairness} \\
     \subjto \quad & \sum_{\consumer} \call_{\consumer} = \target \\
     & \min_{\shift_{\consumer}} \quad \boxed{bill} + \boxed{unwillingness} - \boxed{reward} \\
-    & \subjto \quad \shift_{\consumer} \in [0,1]
+    & \shift_{\consumer} \baseline_{\consumer} \le \call_{\consumer}, \quad \forall i= 1, \ldots, \totalConsumers \\
+    & \subjto \quad \shift_{\consumer} \in [0,1], \quad \forall i= 1, \ldots, \totalConsumers.
   \end{align}
 \end{subequations}
 
@@ -69,13 +77,73 @@ The whole bilevel program:
 The bilevel optimization problem shall be  
 \begin{subequations}
   \begin{align}
-    \max_{\call_{\consumer}} \quad & (\onprice - \offprice) \com(\shift_{\consumer}) - \alpha ( \target - \sum_{\shift_{\consumer}} \shift_{\consumer} \baseline_{\consumer} ) - \beta \frac{1}{N} \sum_{\consumer} (\midcall - \call_{\consumer})^2 \\
+    \max_{\call_{\consumer}, \whom_{\consumer}} \quad & (\onprice - \offprice) \com(\shift_{\consumer}) - \alpha ( \target - \sum_{\shift_{\consumer}} \shift_{\consumer} \baseline_{\consumer} ) - \beta \frac{1}{N} \sum_{\consumer} (\midcall - \call_{\consumer})^2 \\
     \subjto \quad & \sum_{\consumer=1}^{\totalConsumers} \call_{\consumer} = \target \\
     & \min_{\shift_{\consumer}} \quad \onprice \baseline_{\consumer} (1 - \shift_{\consumer}) + \offprice \baseline_{\consumer} \shift_{\consumer} + \boxed{unwillingness} \\
     & \qquad - \frac{1}{2} \shift_{\consumer} \text{\baseline}_{\consumer} (\onprice - \offprice) \notag \\
-    & \subjto \quad \shift_{\consumer} \in [0,1]
+    & \shift_{\consumer} \baseline_{\consumer} \le \call_{\consumer}, \quad \forall i= 1, \ldots, \totalConsumers \\
+    & \subjto \quad \shift_{\consumer} \in [0,1], \quad \forall i= 1, \ldots, \totalConsumers.
   \end{align}
 \end{subequations}
+Or
+\begin{subequations}
+  \begin{align}
+    \max_{\call_{\consumer},\whom_{\consumer}} \quad & (\onprice - \offprice) \com(\shift_{\consumer}) - \alpha ( \target - \sum_{\shift_{\consumer}} \shift_{\consumer} \baseline_{\consumer} ) - \beta \frac{1}{N} \sum_{\consumer} (\midcall - \call_{\consumer})^2 \\
+    \subjto \quad & \sum_{\consumer=1}^{\totalConsumers} \call_{\consumer} = \target \\
+    & \min_{\shift_{\consumer}} \quad \onprice \baseline_{\consumer} - \frac{3}{2} \baseline_{\consumer} \shift_{\consumer} ( \onprice - \offprice ) + \boxed{unwillingness}\\
+    & \subjto \quad \shift_{\consumer} \baseline_{\consumer} \le \call_{\consumer}, \quad \forall i= 1, \ldots, \totalConsumers \\
+    & \shift_{\consumer} \in [0,1], \quad \forall i= 1, \ldots, \totalConsumers.
+  \end{align}
+\end{subequations}
+
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{ c c c}
+      \hline \hline
+      Time & 1AM-9AM \& 9PM-1AM & 9AM-9PM \\ [0.5ex]
+      types & off-peak & on-peak \\
+      \hline \hline 
+    \end{tabular}
+    \caption{On-peak and off-peak hours per a day}
+  \end{center}
+\end{table}
+
+
+
+
+
+\newpage
+{\red Nomenclature:}
+
+% \begin{longtblr}{@{}ll@{}}
+%   \hline \hline
+% \end{longtblr}
+
+
+\begin{table}[H]
+  \caption{\mbox{Indices, parameters and variables that are used in this paper.}} \label{table:var}
+  \begin{supertabular}{@{}l l @{}}
+    \hline\\[-.5em]
+    {\bfseries Indices}\\
+    $\consumer$       & The consumer of the electricity \\
+    $\totalConsumers$ & The toal number of consumers \\
+    {\bfseries Parameters} \\
+    $\onprice$ & The tariff of the electricity during on-peak hours \\
+    $\offprice$ & The tariff of the electricity during off-peak hours \\
+    $\baseline_{\consumer}$ & The amount of electricity that consumer $\consumer$ required for {\red hourly} bases \\
+    $\target$ & The total amount of electricity to be reduced/shifted that the aggregator should achieve \\
+    {\bfseries Variables} \\
+    \underline{Leader}\\
+    $\call_{\consumer}$ & The amount of electricity that the consumer $\consumer$ should shift \\
+
+    \underline{Followers}\\
+    $\shift_{\consumer}$      & The decision to shift the electricity consumption during on-peak hours.\\[2em]
+    \hline
+  \end{supertabular}
+\end{table}\vspace{-1.5em}
+
+
 
 
 {\red Problem description} Normally in the energy market, there are different stakeholders including producer/utility, aggregator, and consumers \cite{ALAMOUSH2024114074}.
@@ -114,7 +182,12 @@ In this setting, the optimal strategy from the followers matters to the leader o
 Therefore, the followers's optimal strategy chosen from the set of optimal strategies serves the objective of the leader otherwise, we have challenges that can be problematic.
 
 
+{\red Literature reviews} The study by Tiwari et al. \cite{TIWARI2025101671} proposed a bilevel optimization to capture the interaction between the distribution system operator (DSO) and the aggregator.
+The DSO plays as a leader and the aggregators play as a followers.
+The leader has multiple objectives
 
+
+\cite{sinha2018review}
 
 
 
@@ -123,10 +196,13 @@ Therefore, the followers's optimal strategy chosen from the set of optimal strat
 
 
 \newpage
-{\red Literature reviews}
 
 
-\cite{sinha2018review}
+
+\begin{optim}
+  \setObj{\max}{\call_{\consumer}}{f(\call)}
+  \addEqCons{g(x)}{0}
+\end{optim}
 
 
 \newpage
